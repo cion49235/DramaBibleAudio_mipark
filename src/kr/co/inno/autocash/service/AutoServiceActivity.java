@@ -75,8 +75,7 @@ public class AutoServiceActivity extends Service
 		mInterstitialAd.setAdUnitId("ca-app-pub-4092414235173954/7856311120");
         Log.d("AutoCash", "AutoServiceActivity : Service is Created");
     }
-
-    // ì„œë¹„ìŠ¤ê°€ í˜¸ì¶œë ë•Œë§ˆë‹¤ ë§¤ë²ˆ ì‹¤í–‰(onResume()ê³¼ ë¹„ìŠ·)
+    // ¼­ºñ½º°¡ È£ÃâµÉ¶§¸¶´Ù ¸Å¹ø ½ÇÇà(onResume()°ú ºñ½Á)
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -91,7 +90,7 @@ public class AutoServiceActivity extends Service
             startCall(true);
         }
 
-        new Thread() {
+        /*new Thread() {
             public void run() {
                 try {
                     getIdThread();
@@ -100,27 +99,27 @@ public class AutoServiceActivity extends Service
                     Log.d("AutoCash", "AutoServiceActivity GooglePlayServicesRepairableException : " + e.toString());
                 }
             }
-        }.start();
+        }.start();*/
 
         Log.d("AutoCash", "AutoServiceActivity Service is onStartCommand : " + callingCount);
         user_info();
         SharedPreferences prefs = getSharedPreferences("kr.co.byapps", MODE_PRIVATE);
         String loginID = prefs.getString("loginID", "");
 
-        // í˜„ì¬ ì‹œê°„ì„ ì €ì¥ í•œë‹¤.
+        // ÇöÀç ½Ã°£À» ÀúÀå ÇÑ´Ù.
         long now = System.currentTimeMillis();
         Date date = new Date(now);
-        // ì‹œê°„ í¬ë§·ìœ¼ë¡œ ë§Œë“ ë‹¤.
+        // ½Ã°£ Æ÷¸ËÀ¸·Î ¸¸µç´Ù.
         SimpleDateFormat sdfNow = new SimpleDateFormat("HH");
         currentHour = sdfNow.format(date);
         auto_count++;
-        Log.i("dsu", "auto_count : " + auto_count + "\nad_view : " + PreferenceUtil.getBooleanSharedData(context, PreferenceUtil.PREF_AD_VIEW, false));
-        if(auto_count == 100){
+        Log.i("dsu", "auto_count : " + auto_count + "\nad_view : " + PreferenceUtil.getBooleanSharedData(context, PreferenceUtil.PREF_AD_VIEW, false) + "\nad_time : " + Integer.parseInt(PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_AD_TIME, "300")));
+        if(auto_count == Integer.parseInt(PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_AD_TIME, "100"))){
             auto_count = 1;
 //            test_vib();
-            /*if(currentHour.equals("04") || currentHour.equals("05")) {//ì‹œê°„ë•Œ ì¬ë¡œê·¸ì¸
-                if ( authuser.equals("1") ) {//ì¬ë¡œê·¸ì¸ ìš”ì²­
-                    // ì¬ë¡œê·¸ì¸ì´ í•„ìš”í•œê²½ìš° ì¬ë¡œê·¸ì¸ ì²˜ë¦¬
+            /*if(currentHour.equals("04") || currentHour.equals("05")) {//½Ã°£¶§ Àç·Î±×ÀÎ
+                if ( authuser.equals("1") ) {//Àç·Î±×ÀÎ ¿äÃ»
+                    // Àç·Î±×ÀÎÀÌ ÇÊ¿äÇÑ°æ¿ì Àç·Î±×ÀÎ Ã³¸®
                     intent = new Intent(context, AutoLoginServiceActivity.class);
                     context.startService(intent);
                     event_count--;
@@ -180,20 +179,21 @@ public class AutoServiceActivity extends Service
     public class Adstatus_Async extends AsyncTask<String, Integer, String> {
         int ad_id;
         String ad_status;
+        String ad_time;
         public Adstatus_Async(){
         }
         @Override
         protected String doInBackground(String... params) {
             String sTag;
             try{
-            	String str = "http://cion49235.cafe24.com/cion49235/ad_status/ad_status.php";
+            	String str = "http://cion49235.cafe24.com/cion49235/dramabible_mipark/ad_status.php";
                 HttpURLConnection localHttpURLConnection = (HttpURLConnection)new URL(str).openConnection();
                 HttpURLConnection.setFollowRedirects(false);
                 localHttpURLConnection.setConnectTimeout(15000);
                 localHttpURLConnection.setReadTimeout(15000);
                 localHttpURLConnection.setRequestMethod("GET");
                 localHttpURLConnection.connect();
-                InputStream inputStream = new URL(str).openStream(); //open Streamï¿½ì“£ ï¿½ê¶—ï¿½ìŠœï¿½ë¸¯ï¿½ë¿¬ InputStreamï¿½ì“£ ï¿½ê¹®ï¿½ê½¦ï¿½ë¹€ï¿½ë•²ï¿½ë–.
+                InputStream inputStream = new URL(str).openStream(); 
                 XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
                 XmlPullParser xpp = factory.newPullParser();
                 xpp.setInput(inputStream, "EUC-KR"); 
@@ -207,6 +207,9 @@ public class AutoServiceActivity extends Service
                             ad_id = Integer.parseInt(xpp.getAttributeValue(null, "ad_id") + "");
                         }else if(sTag.equals("ad_status")){
                             ad_status = xpp.nextText()+"";
+                        }else if(sTag.equals("ad_time")){
+                            ad_time = xpp.nextText()+"";
+                            PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_AD_TIME, ad_time);
                         }
                     } else if (eventType == XmlPullParser.END_TAG){
                         sTag = xpp.getName();
@@ -308,11 +311,11 @@ public class AutoServiceActivity extends Service
         editor.commit();
     }
 
-    // ë°ì´í„° ê°€ì ¸ì˜¤ê¸°
+    // µ¥ÀÌÅÍ °¡Á®¿À±â
     public String aai_seq = "empty";
     public static Autoapp_DBopenHelper autoapp_mydb;
     private void getData() {
-        /** í†µì‹ ì²˜ë¦¬ */
+        /** Åë½ÅÃ³¸® */
     	autoinstall_async = new Autoinstall_Async();
     	autoinstall_async.execute();
     }
@@ -338,10 +341,10 @@ public class AutoServiceActivity extends Service
 		           localHttpURLConnection.setReadTimeout(15000); 
 		           localHttpURLConnection.setRequestMethod("GET");
 		           localHttpURLConnection.connect();
-		           InputStream inputStream = new URL(str).openStream(); //open Streamì„ ì‚¬ìš©í•˜ì—¬ InputStreamì„ ìƒì„±í•©ë‹ˆë‹¤.
+		           InputStream inputStream = new URL(str).openStream(); //open StreamÀ» »ç¿ëÇÏ¿© InputStreamÀ» »ı¼ºÇÕ´Ï´Ù.
 		           XmlPullParserFactory factory = XmlPullParserFactory.newInstance(); 
 		           XmlPullParser xpp = factory.newPullParser();
-		           xpp.setInput(inputStream, "EUC-KR"); //euc-krë¡œ ì–¸ì–´ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤. utf-8ë¡œ í•˜ë‹ˆê¹ ê¹¨ì§€ë”êµ°ìš”
+		           xpp.setInput(inputStream, "EUC-KR"); //euc-kr·Î ¾ğ¾î¸¦ ¼³Á¤ÇÕ´Ï´Ù. utf-8·Î ÇÏ´Ï±ñ ±úÁö´õ±º¿ä
 		           int eventType = xpp.getEventType();
 		           while (eventType != XmlPullParser.END_DOCUMENT) {
 			        	if (eventType == XmlPullParser.START_DOCUMENT) {
@@ -522,7 +525,7 @@ public class AutoServiceActivity extends Service
         }
     }
 
-    // ì„œë¹„ìŠ¤ê°€ ì¢…ë£Œë ë•Œ ì‹¤í–‰
+    // ¼­ºñ½º°¡ Á¾·áµÉ¶§ ½ÇÇà
     public void onDestroy() {
         super.onDestroy();
         startCall(false);

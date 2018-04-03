@@ -101,7 +101,6 @@ public class AutoLayoutGoogleActivity extends Activity {
 
         this.deleteDatabase("webview.db");
         this.deleteDatabase("webviewCache.db");
-
         if ( googleType.equals("2") ) {
             android.webkit.CookieManager.getInstance().removeAllCookie();
         }
